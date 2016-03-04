@@ -2,6 +2,7 @@ package com.numberoverzero.snippets.dwhello;
 
 import com.google.common.collect.Maps;
 import com.numberoverzero.snippets.dwhello.core.Person;
+import com.numberoverzero.snippets.dwhello.filters.SessionFilter;
 import com.numberoverzero.snippets.dwhello.health.ShallowHealthCheck;
 import com.numberoverzero.snippets.dwhello.resources.PersonResource;
 import io.dropwizard.Application;
@@ -19,6 +20,7 @@ public class HelloApplication extends Application<Configuration> {
     @Override
     public void run(Configuration configuration, Environment environment) throws Exception {
         Map<String, Person> personStore = Maps.newHashMap();
+        environment.jersey().register(new SessionFilter());
         environment.jersey().register(new PersonResource(personStore::get, personStore::put));
 
         environment.healthChecks().register("shallow", new ShallowHealthCheck());
