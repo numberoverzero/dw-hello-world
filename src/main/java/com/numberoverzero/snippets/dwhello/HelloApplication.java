@@ -30,8 +30,8 @@ public class HelloApplication extends Application<Configuration> {
 
         SimpleInjector injector = new SimpleInjector(TokenParam.class, OtherParam.class);
         injector.register(Token.class, () -> new Token("anon-" + UUID.randomUUID().toString()));
-        injector.register(TokenParam.class, Token.class, () -> new Token("token-" + UUID.randomUUID().toString()));
-        injector.register(OtherParam.class, Token.class, () -> new Token("other-" + UUID.randomUUID().toString()));
+        injector.register(Token.class, () -> new Token("token-" + UUID.randomUUID().toString()), TokenParam.class);
+        injector.register(Token.class, () -> new Token("other-" + UUID.randomUUID().toString()), OtherParam.class);
 
         environment.jersey().register(injector);
     }
