@@ -1,11 +1,10 @@
 package com.numberoverzero.snippets.dwhello.resources;
 
 import com.numberoverzero.snippets.dwhello.core.Person;
-import com.numberoverzero.snippets.dwhello.core.Session;
+import com.numberoverzero.snippets.dwhello.core.Token;
+import com.numberoverzero.snippets.dwhello.injection.TokenParam;
 
 import javax.ws.rs.*;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -25,9 +24,9 @@ public class PersonResource {
     @GET
     @Path("person/{name}")
     @Produces("application/json")
-    public Response get(@PathParam("name") String name, @Context ContainerRequestContext context) {
-        Session session = (Session) context.getProperty("session");
-        System.out.println("Session calls: " + ++session.calls);
+    public Response get(@PathParam("name") String name, @TokenParam Token token) {
+        System.out.println("Token : " + token.getToken());
+
         Person person = this.getPerson.apply(name);
         if (person == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
@@ -38,9 +37,7 @@ public class PersonResource {
     @POST
     @Path("person")
     @Consumes("application/json")
-    public void post(Person person, @Context ContainerRequestContext context) {
-        Session session = (Session) context.getProperty("session");
-        System.out.println("Session calls: " + ++session.calls);
+    public void post(Person person) {
         this.putPerson.accept(person.name, person);
     }
 }
