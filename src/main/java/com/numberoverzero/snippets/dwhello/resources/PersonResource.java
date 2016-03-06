@@ -5,6 +5,8 @@ import com.numberoverzero.snippets.dwhello.core.Token;
 import com.numberoverzero.snippets.dwhello.injection.TokenParam;
 
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -24,7 +26,8 @@ public class PersonResource {
     @GET
     @Path("person/{name}")
     @Produces("application/json")
-    public Response get(@PathParam("name") String name, @TokenParam Token token) {
+    public Response get(@PathParam("name") String name, @TokenParam Token token, @Context HttpHeaders headers) {
+        System.out.println(headers.getRequestHeaders());
         System.out.println("Token : " + token.getToken());
 
         Person person = this.getPerson.apply(name);
