@@ -1,4 +1,4 @@
-package com.numberoverzero.snippets.dwhello.injection;
+package com.numberoverzero.snippets.dwhello;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;

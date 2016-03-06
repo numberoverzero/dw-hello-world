@@ -1,9 +1,6 @@
 package com.numberoverzero.snippets.dwhello.resources;
 
-import com.numberoverzero.snippets.dwhello.core.Person;
-import com.numberoverzero.snippets.dwhello.core.Token;
-import com.numberoverzero.snippets.dwhello.injection.OtherParam;
-import com.numberoverzero.snippets.dwhello.injection.TokenParam;
+import com.numberoverzero.snippets.dwhello.core.*;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -31,10 +28,12 @@ public class PersonResource {
             @PathParam("name") String name,
             @TokenParam Token token,
             @Context HttpHeaders headers,
-            @OtherParam Token token2) {
+            @OtherParam Token token2,
+            @ProviderParam Token token3) {
         System.out.println(headers.getRequestHeaders());
-        System.out.println("Token : " + token.getToken());
-        System.out.println("Token2 : " + token2.getToken());
+        System.out.println("Token: " + token.getToken());
+        System.out.println("Token2: " + token2.getToken());
+        System.out.println("Token3: " + token3.getToken());
 
         Person person = this.getPerson.apply(name);
         if (person == null) {
