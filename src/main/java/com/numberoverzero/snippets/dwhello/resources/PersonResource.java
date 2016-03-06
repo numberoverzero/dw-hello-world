@@ -1,5 +1,8 @@
 package com.numberoverzero.snippets.dwhello.resources;
 
+import com.numberoverzero.snippets.dwhello.annotations.OtherParam;
+import com.numberoverzero.snippets.dwhello.annotations.ProviderParam;
+import com.numberoverzero.snippets.dwhello.annotations.TokenParam;
 import com.numberoverzero.snippets.dwhello.core.*;
 
 import javax.ws.rs.*;

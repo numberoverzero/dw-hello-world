@@ -1,4 +1,4 @@
-package com.numberoverzero.snippets.dwhello.core;
+package com.numberoverzero.snippets.dwhello.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,5 +7,4 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER, ElementType.FIELD})
-public @interface OtherParam {
-}
+public @interface TokenParam {}

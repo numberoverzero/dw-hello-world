@@ -1,4 +1,4 @@
-package com.numberoverzero.snippets.dwhello.core;
+package com.numberoverzero.snippets.dwhello.annotations;
 
 
 import java.lang.annotation.ElementType;

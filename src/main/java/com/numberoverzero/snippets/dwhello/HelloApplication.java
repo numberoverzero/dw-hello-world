@@ -1,6 +1,9 @@
 package com.numberoverzero.snippets.dwhello;
 
 import com.google.common.collect.Maps;
+import com.numberoverzero.snippets.dwhello.annotations.OtherParam;
+import com.numberoverzero.snippets.dwhello.annotations.ProviderParam;
+import com.numberoverzero.snippets.dwhello.annotations.TokenParam;
 import com.numberoverzero.snippets.dwhello.core.*;
 import com.numberoverzero.snippets.dwhello.health.ShallowHealthCheck;
 import com.numberoverzero.snippets.dwhello.providers.TokenProvider;
