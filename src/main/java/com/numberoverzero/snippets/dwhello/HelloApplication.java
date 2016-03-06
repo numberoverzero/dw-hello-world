@@ -4,7 +4,8 @@ import com.google.common.collect.Maps;
 import com.numberoverzero.snippets.dwhello.core.Person;
 import com.numberoverzero.snippets.dwhello.core.Token;
 import com.numberoverzero.snippets.dwhello.health.ShallowHealthCheck;
-import com.numberoverzero.snippets.dwhello.injection.AnyFactoryProvider;
+import com.numberoverzero.snippets.dwhello.injection.SimpleInjector;
+import com.numberoverzero.snippets.dwhello.injection.OtherParam;
 import com.numberoverzero.snippets.dwhello.injection.TokenParam;
 import com.numberoverzero.snippets.dwhello.resources.PersonResource;
 import io.dropwizard.Application;
@@ -27,10 +28,12 @@ public class HelloApplication extends Application<Configuration> {
 
         environment.healthChecks().register("shallow", new ShallowHealthCheck());
 
-        AnyFactoryProvider anyFactory = new AnyFactoryProvider(TokenParam.class);
-        anyFactory.register(Token.class, () -> new Token("anyFactory-" + UUID.randomUUID().toString()));
+        SimpleInjector injector = new SimpleInjector(TokenParam.class, OtherParam.class);
+        injector.register(Token.class, () -> new Token("anon-" + UUID.randomUUID().toString()));
+        injector.register(TokenParam.class, Token.class, () -> new Token("token-" + UUID.randomUUID().toString()));
+        injector.register(OtherParam.class, Token.class, () -> new Token("other-" + UUID.randomUUID().toString()));
 
-        environment.jersey().register(anyFactory.bind);
+        environment.jersey().register(injector);
     }
 
 }
