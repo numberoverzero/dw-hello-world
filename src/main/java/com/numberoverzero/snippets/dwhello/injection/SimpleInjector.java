@@ -1,8 +1,8 @@
 package com.numberoverzero.snippets.dwhello.injection;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
@@ -11,7 +11,10 @@ import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * Greatly reduce the complexity of injecting parameters into methods.
@@ -35,8 +38,13 @@ import java.util.function.Supplier;
  *
  * // Wherever you set up your environment
  * SimpleInjector injector = new SimpleInjector(CustomInject.class);
- * injector.register(User.class, () -> new User("Injected!"));
  * environment.jersey().register(injector);
+ *
+ * // Default injector for instances of User
+ * injector.register(User.class, () -> new User("DefaultInject"));
+ *
+ * // Specific injector for @CustomInject User
+ * injector.register(User.class, () -> new User("CustomInject"), CustomInject.class);
  * }</pre>
  */
 public class SimpleInjector extends AbstractBinder implements ValueFactoryProvider {
@@ -60,24 +68,32 @@ public class SimpleInjector extends AbstractBinder implements ValueFactoryProvid
     }
 
     /**
-     * Only use the given factory when both annotation and class match.
-     *
-     * @param annotation      The annotation to match
-     * @param factoryClass    The class to create instances of
-     * @param factoryFunction Returns an instance of the class for injection when annotation matches
+     * Negate a predicate cleanly.  Why isn't this part of the stdlib. :(
      */
-    public void register(Class<? extends Annotation> annotation, Class<?> factoryClass, Supplier<?> factoryFunction) {
-        insertFactory(annotatedFactories.get(annotation), factoryClass, factoryFunction);
+    private static <R> Predicate<R> not(Predicate<R> predicate) {
+        return predicate.negate();
     }
 
     /**
-     * Only use the given factory when there is no annotation-specific factory for the given class.
+     * Register a Supplier (factory function) for a given class.  If any annotations are provided, the factory function
+     * will only be used to create instances of the class when the annotation matches.  If no annotations are provided,
+     * the function will be used when there are no annotation-specific functions available.
      *
-     * @param factoryClass    The class to create an instance of
-     * @param factoryFunction Returns an instance of the class for injection
+     * @param factoryClass      The class to create instances of
+     * @param factoryFunction   Function that returns an instance of the class for injection
+     * @param annotationClasses Any annotations to associate this factory function with.
      */
-    public void register(Class<?> factoryClass, Supplier<?> factoryFunction) {
-        insertFactory(anonymousFactories, factoryClass, factoryFunction);
+    @SafeVarargs
+    public final void register(
+            Class<?> factoryClass, Supplier<?> factoryFunction, Class<? extends Annotation>... annotationClasses) {
+        if (annotationClasses.length == 0) {
+            insertFactory(anonymousFactories, factoryClass, factoryFunction);
+        } else {
+            verifyAnnotationsAllowed(annotationClasses);
+            Arrays.stream(annotationClasses)
+                    .forEach(annotation ->
+                            insertFactory(annotatedFactories.get(annotation), factoryClass, factoryFunction));
+        }
     }
 
     /**
@@ -101,7 +117,8 @@ public class SimpleInjector extends AbstractBinder implements ValueFactoryProvid
             factory = anonymousFactories.get(expectedClass);
             if (factory == null) {
                 // Annotated for this injector, but no factory exists
-                throw new RuntimeException(String.format("No factory registered for class '%s'", expectedClass));
+                throw new RuntimeException(String.format(
+                        "SimpleInjector expected factory for class '%s' but none provided", expectedClass));
             }
         }
         return factory;
@@ -120,15 +137,13 @@ public class SimpleInjector extends AbstractBinder implements ValueFactoryProvid
      */
     @Override
     protected void configure() {
-        bind((ValueFactoryProvider) this).to(ValueFactoryProvider.class);
-        Arrays.stream(this.annotationClasses).forEach(bind(InjectionResolver.class)::to);
     }
 
     /**
      * Insert into the mapping an anonymous {@link Factory} that wraps the factoryFunction
      */
-    protected <T> void insertFactory(
-            Map<Class<?>, Factory<?>> mapping, Class<?> factoryClass, Supplier<T> factoryFunction) {
+    protected void insertFactory(
+            Map<Class<?>, Factory<?>> mapping, Class<?> factoryClass, Supplier<?> factoryFunction) {
         mapping.put(factoryClass, new Factory() {
             @Override
             public Object provide() {
@@ -138,5 +153,18 @@ public class SimpleInjector extends AbstractBinder implements ValueFactoryProvid
             @Override
             public void dispose(Object o) {/* not used */}
         });
+    }
+
+    /**
+     * Throws RuntimeException if any of the annotations are not available for injection
+     */
+    protected void verifyAnnotationsAllowed(Class<? extends Annotation>[] annotationClasses) {
+        Set<Class<? extends Annotation>> allowedAnnotations = ImmutableSet.copyOf(this.annotationClasses);
+        Set<Class<? extends Annotation>> disallowedAnnotations = Arrays.stream(annotationClasses)
+                .filter(not(allowedAnnotations::contains)).collect(Collectors.toSet());
+        if (!disallowedAnnotations.isEmpty()) {
+            throw new RuntimeException(
+                    "Cannot configure injection for unmapped annotations: " + disallowedAnnotations.toString());
+        }
     }
 }
